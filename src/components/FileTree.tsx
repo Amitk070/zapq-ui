@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { API_BASE } from '../api/config';
 
 type Props = {
   onFileSelect: (path: string) => void;
@@ -8,7 +9,7 @@ const FileTree: React.FC<Props> = ({ onFileSelect }) => {
   const [files, setFiles] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/files')
+    fetch(`${API_BASE}/files`)
       .then(res => res.json())
       .then(data => setFiles(data.files || []))
       .catch(() => setFiles([]));
