@@ -1,6 +1,6 @@
-
 // File: src/components/ProjectRefactor.tsx
 import React, { useState } from 'react';
+import { API_BASE } from '../api/config';
 
 const ProjectRefactor: React.FC = () => {
   const [zipFile, setZipFile] = useState<File | null>(null);
@@ -25,7 +25,7 @@ const ProjectRefactor: React.FC = () => {
       formData.append('file', zipFile);
       formData.append('name', zipFile.name.replace(/\.zip$/, ''));
 
-      const uploadRes = await fetch('http://localhost:3001/upload-project', {
+      const uploadRes = await fetch(`${API_BASE}/upload-project`, {
         method: 'POST',
         body: formData,
       });
@@ -33,7 +33,7 @@ const ProjectRefactor: React.FC = () => {
       const uploadData = await uploadRes.json();
       if (!uploadData.success) throw new Error('Upload failed');
 
-      const refactorRes = await fetch('http://localhost:3001/claude-project', {
+      const refactorRes = await fetch(`${API_BASE}/claude-project`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectPath: uploadData.path }),
