@@ -7,6 +7,7 @@ import PreviewPanel from '../components/PreviewPanel';
 import FileGenerator from '../components/FileGenerator';
 import ProjectRefactor from '../components/ProjectRefactor';
 import { API_BASE } from '../api/config';
+import UploadedFileTree from '../components/UploadedFileTree';
 
 const App = () => {
   type OpenFile = { path: string; content: string };
@@ -51,6 +52,7 @@ const App = () => {
       <aside className="w-64 bg-white border-r p-4 flex flex-col space-y-6 shadow-lg">
         <h1 className="text-xl font-bold text-indigo-700">⚡ zapq</h1>
         <FileGenerator />
+        <UploadedFileTree onSelect={loadFile} />
         <div>
           <h2 className="text-sm font-semibold text-gray-500 mb-2">Project Files</h2>
           <FileTree onFileSelect={loadFile} />
