@@ -5,6 +5,7 @@ import ChatPanel from '../components/ChatPanel';
 import CodeEditor from '../components/CodeEditor';
 import PreviewPanel from '../components/PreviewPanel';
 import FileGenerator from '../components/FileGenerator';
+import ProjectRefactor from '../components/ProjectRefactor';
 import { API_BASE } from '../api/config';
 
 const App = () => {
@@ -93,6 +94,9 @@ const App = () => {
             </div>
             <div className="bg-white p-4 rounded-lg shadow-md">
               <ChatPanel onResponse={setCode} />
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <ProjectRefactor />
             </div>
             <div className="bg-white p-4 rounded-lg shadow-md">
               <PreviewPanel />
