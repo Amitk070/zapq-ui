@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { callClaude } from '../api/callClaude';
+import { API_BASE } from '../api/config';
 
 const FileGenerator: React.FC = () => {
   const [filename, setFilename] = useState('');
@@ -14,7 +15,7 @@ const FileGenerator: React.FC = () => {
       const prompt = `Create a React TypeScript + Tailwind component called "${filename.replace(/\.tsx$/, '')}" and output only the .tsx code.`;
       const code = await callClaude(prompt);
 
-      const res = await fetch('http://localhost:3001/save', {
+      const res = await fetch(`${API_BASE}/save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -31,8 +32,7 @@ const FileGenerator: React.FC = () => {
         err.text().then(text => console.error('❗ Server said:', text));
       }
       setStatus('❌ Failed to generate file');
-    }
-     finally {
+    } finally {
       setLoading(false);
     }
   };
