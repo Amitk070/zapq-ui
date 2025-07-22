@@ -1,13 +1,11 @@
-// File: src/pages/App.tsx
 import React, { useState } from 'react';
-import FileTree from '../components/FileTree';
-import ChatPanel from '../components/ChatPanel';
+import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
+import AIChat from '../components/AIChat';
 import CodeEditor from '../components/CodeEditor';
-import PreviewPanel from '../components/PreviewPanel';
-import FileGenerator from '../components/FileGenerator';
-import ProjectRefactor from '../components/ProjectRefactor';
+import ComponentGenerator from '../components/ComponentGenerator';
+import ProjectUpload from '../components/ProjectUpload';
 import { API_BASE } from '../api/config';
-import UploadedFileTree from '../components/UploadedFileTree';
 
 const App = () => {
   type OpenFile = { path: string; content: string };
@@ -15,7 +13,16 @@ const App = () => {
   const [openFiles, setOpenFiles] = useState<OpenFile[]>([]);
   const [activeFile, setActiveFile] = useState<string>('');
   const [code, setCode] = useState('');
+  const [files, setFiles] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'chat' | 'generator' | 'upload'>('chat');
 
+  // Load files on mount
+  React.useEffect(() => {
+    fetch(`${API_BASE}/files`)
+      .then(res => res.json())
+      .then(data => setFiles(data.files || []))
+      .catch(() => setFiles([]));
+  }, []);
   const loadFile = async (path: string) => {
     const res = await fetch(`${API_BASE}/file?path=${encodeURIComponent(path)}`);
     const text = await res.text();
@@ -46,23 +53,31 @@ const App = () => {
     }
   };
 
-  return (
-    <div className="h-screen w-screen flex text-gray-800 font-sans">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r p-4 flex flex-col space-y-6 shadow-lg">
-        <h1 className="text-xl font-bold text-indigo-700">⚡ zapq</h1>
-        <FileGenerator />
-        <UploadedFileTree onSelect={loadFile} />
-        <div>
-          <h2 className="text-sm font-semibold text-gray-500 mb-2">Project Files</h2>
-          <FileTree onFileSelect={loadFile} />
-        </div>
-      </aside>
+  const handleCodeGenerated = (newCode: string, filename?: string) => {
+    setCode(newCode);
+    if (filename) {
+      const newFile = { path: filename, content: newCode };
+      setOpenFiles(prev => {
+        const existing = prev.find(f => f.path === filename);
+        if (existing) {
+          return prev.map(f => f.path === filename ? newFile : f);
+        }
+        return [...prev, newFile];
+      });
+      setActiveFile(filename);
+    }
+  };
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col bg-gray-50">
-        {/* Tab bar */}
-        <header className="flex items-center bg-white border-b px-4 py-2 space-x-2 shadow-sm overflow-x-auto">
+  return (
+    <div className="h-screen w-screen flex flex-col bg-background text-white font-sans overflow-hidden">
+      <Header />
+      
+      <div className="flex-1 flex overflow-hidden">
+        <Sidebar onFileSelect={loadFile} files={files} />
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Tab bar */}
+          <div className="flex items-center bg-surface border-b border-zinc-800 px-4 py-2 space-x-2 overflow-x-auto">
           {openFiles.map(file => (
             <button
               key={file.path}
@@ -70,10 +85,10 @@ const App = () => {
                 setActiveFile(file.path);
                 setCode(file.content);
               }}
-              className={`flex items-center px-3 py-1 rounded-md text-sm font-medium transition whitespace-nowrap ${
+              className={`flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition whitespace-nowrap ${
                 activeFile === file.path
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'hover:bg-gray-100 text-gray-600'
+                  ? 'bg-primary text-white'
+                  : 'hover:bg-surface-light text-zinc-400'
               }`}
             >
               {file.path.split('/').pop()}
@@ -82,29 +97,78 @@ const App = () => {
                   e.stopPropagation();
                   closeTab(file.path);
                 }}
-                className="ml-2 text-gray-400 hover:text-red-500 cursor-pointer"
+                className="ml-2 text-zinc-400 hover:text-red-400 cursor-pointer"
               >✕</span>
             </button>
           ))}
-        </header>
+          </div>
 
-        {/* Editor and panels */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-4 space-y-4 max-w-7xl mx-auto">
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <CodeEditor code={code} />
+          {/* Main content area */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left panel - Editor */}
+            <div className="flex-1 p-4 overflow-hidden">
+              <CodeEditor 
+                code={code} 
+                filename={activeFile || 'component.tsx'}
+                language="typescript"
+              />
             </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <ChatPanel onResponse={setCode} />
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <ProjectRefactor />
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <PreviewPanel />
+            
+            {/* Right panel - AI Tools */}
+            <div className="w-96 border-l border-zinc-800 flex flex-col">
+              {/* Tab navigation */}
+              <div className="flex border-b border-zinc-800">
+                <button
+                  onClick={() => setActiveTab('chat')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'chat'
+                      ? 'bg-primary text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-surface-light'
+                  }`}
+                >
+                  AI Chat
+                </button>
+                <button
+                  onClick={() => setActiveTab('generator')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'generator'
+                      ? 'bg-primary text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-surface-light'
+                  }`}
+                >
+                  Generator
+                </button>
+                <button
+                  onClick={() => setActiveTab('upload')}
+                  className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'upload'
+                      ? 'bg-primary text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-surface-light'
+                  }`}
+                >
+                  Upload
+                </button>
+              </div>
+              
+              {/* Tab content */}
+              <div className="flex-1 overflow-hidden">
+                {activeTab === 'chat' && (
+                  <AIChat onCodeGenerated={handleCodeGenerated} />
+                )}
+                {activeTab === 'generator' && (
+                  <div className="p-4 overflow-y-auto h-full">
+                    <ComponentGenerator onCodeGenerated={handleCodeGenerated} />
+                  </div>
+                )}
+                {activeTab === 'upload' && (
+                  <div className="p-4 overflow-y-auto h-full">
+                    <ProjectUpload />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );
