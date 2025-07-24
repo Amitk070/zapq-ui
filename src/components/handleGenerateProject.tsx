@@ -6,7 +6,7 @@ const handleGenerateProject = async () => {
   setStatus("Generating project...");
 
   try {
-    const res = await fetch("${API_BASE}/generate-project", {
+    const res = await fetch(`${API_BASE}/generate-project`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userPrompt: prompt })
