@@ -23,6 +23,12 @@ const CodeEditor: React.FC<Props> = ({ code, language = 'typescript', filename =
   const handleEditorChange = (value: string | undefined) => {
     setEditedCode(value || '');
   };
+  
+  function extractCodeBlock(text: string) {
+  const match = text.match(/```(?:tsx)?\s*([\s\S]+?)```/);
+  return match ? match[1].trim() : text;
+  }
+
 
   const copyToClipboard = async () => {
     try {
@@ -45,17 +51,21 @@ const CodeEditor: React.FC<Props> = ({ code, language = 'typescript', filename =
   };
 
   const handleImprove = async () => {
-    setLoading(true);
-    try {
-      const prompt = `Improve and modernize the following React + TypeScript component. Use best practices, clean structure, modern patterns, and Tailwind CSS where appropriate. Make it production-ready:\n\n${editedCode}`;
-      const improved = await callClaude(prompt);
-      setEditedCode(improved);
-    } catch (err) {
-      console.error('🧠 Claude improvement error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    const prompt = `Improve and modernize the following React + TypeScript component. Use best practices, clean structure, modern patterns, and Tailwind CSS where appropriate. Make it production-ready:\n\n${editedCode}`;
+    const improved = await callClaude(prompt);
+
+    const extracted = extractCodeBlock(improved); // <- clean Claude response
+    editorRef.current?.setValue(extracted);       // ✅ inject into Monaco
+    setEditedCode(extracted);                     // (optional) update state
+  } catch (err) {
+    console.error('🧠 Claude improvement error:', err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-background' : 'flex-1'} flex flex-col bg-surface rounded-lg border border-zinc-800 overflow-hidden`}>
